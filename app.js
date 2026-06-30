@@ -102,7 +102,6 @@ function renderTable() {
     table.innerHTML = "";
     const selectedEp = viewEpisodeSelect.value;
 
-    // 表示するキャラクターを定義
     const displayCharacters = appData.characters.filter(char => {
         if (selectedEp === "all") return true;
         return char.episodes && char.episodes.includes(parseInt(selectedEp));
@@ -129,8 +128,6 @@ function renderTable() {
     // --- 各行（縦軸） ---
     displayCharacters.forEach((fromChar, index) => {
         const row = document.createElement("tr");
-        
-        // 【重要】行をドラッグ可能にする属性を付与し、キャラクター固有のIDを記憶させる
         row.draggable = true;
         row.dataset.charId = fromChar.id;
 
@@ -143,6 +140,7 @@ function renderTable() {
             const key = `${fromChar.id}-${toChar.id}`;
             td.textContent = appData.appellations[key] || "";
 
+            // 【重要】ここで一人称マス（斜め）のクラスを適用
             if (fromChar.id === toChar.id) {
                 td.classList.add("self-call");
             }
@@ -169,14 +167,13 @@ function renderTable() {
             row.appendChild(td);
         });
 
-        // ドラッグ＆ドロップイベントの組み込み
         setupDragAndDropEvents(row);
         table.appendChild(row);
     });
     updateImageVisibility();
 }
 
-// --- 【新機能】ドラッグ＆ドロップのイベントロジック ---
+// --- 4. 【修正】ドラッグ＆ドロップのイベントロジック ---
 function setupDragAndDropEvents(row) {
     row.addEventListener("dragstart", (e) => {
         row.classList.add("dragging");
@@ -186,16 +183,17 @@ function setupDragAndDropEvents(row) {
 
     row.addEventListener("dragend", () => {
         row.classList.remove("dragging");
-        // 並び替えが終わったら最終的な順番をローカルストレージへ即時保存
+        // ドラッグ終了時に配列データに基づいて「表全体を完全に再描画」する
+        // これにより一人称マスのグレー背景が新しい位置に正しく再計算されます
+        renderTable(); 
         saveToLocalStorage();
     });
 
     row.addEventListener("dragover", (e) => {
-        e.preventDefault(); // ドロップを許可するために必須
+        e.preventDefault(); 
         const draggingRow = table.querySelector(".dragging");
         if (!draggingRow || draggingRow === row) return;
 
-        // マウスの位置を計算して、行の上半分にいれば上に、下半分にいれば下に差し込む
         const bounding = row.getBoundingClientRect();
         const offset = e.clientY - bounding.top;
         if (offset > bounding.height / 2) {
@@ -204,26 +202,24 @@ function setupDragAndDropEvents(row) {
             row.before(draggingRow);
         }
 
-        // 画面上のDOM（行）の並び順に合わせて、内部データ（appData.characters）の順番も並び替える
+        // リアルタイムに配列データを並び替え（横軸ヘッダーの追従処理含む）
         reorderInternalData();
     });
 }
 
-// 画面の見た目の並び順に合わせて、配列データを並び替える関数
 function reorderInternalData() {
-    const rows = Array.from(table.querySelectorAll("tr")).slice(1); // ヘッダー行を除く
+    const rows = Array.from(table.querySelectorAll("tr")).slice(1); 
     const newOrderIds = rows.map(r => parseInt(r.dataset.charId));
 
-    // 現在の表示中キャラだけでなく、全データ（appData.characters）を新しい順序にソートする
+    // 内部配列の順序を書き換える
     appData.characters.sort((a, b) => {
         return newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id);
     });
     
-    // 横軸（列ヘッダー）もリアルタイムに並び替えるために再描画
+    // 【修正】ドラッグ中に横軸のヘッダーも一時的に追従させる
     const headerRow = table.querySelector("tr");
-    const ths = Array.from(headerRow.querySelectorAll("th")).slice(1); // 左上除く
+    const ths = Array.from(headerRow.querySelectorAll("th")).slice(1);
     
-    // 横軸のth要素を縦の並びと同じ順番に並び替える
     newOrderIds.forEach(id => {
         const char = appData.characters.find(c => c.id === id);
         const targetTh = ths.find(th => th.textContent.includes(char.name));
