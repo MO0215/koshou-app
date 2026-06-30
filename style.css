@@ -1,0 +1,188 @@
+:root {
+    --theme-color: #25eeff;
+    --cell-width: 140px;
+    --cell-height: 55px;
+    --font-size: 14px;
+}
+
+/* ダークテーマの配色設定 */
+body.dark-theme {
+    --bg-color: #1a1a1a;
+    --panel-bg: #2a2a2a;
+    --section-bg: #333333;
+    --text-color: #ffffff;
+    --text-sub: #dddddd;
+    --input-bg: #222222;
+    --input-border: #444444;
+    --table-bg: #222222;
+    --td-odd-bg: #2d2d2d;
+    --td-even-bg: #252525;
+    --self-td-bg: #3a3a3a;
+    --th-text-color: #000000;
+}
+
+/* ライトテーマの配色設定 */
+body.light-theme {
+    --bg-color: #f4f6f9;
+    --panel-bg: #ffffff;
+    --section-bg: #f0f2f5;
+    --text-color: #333333;
+    --text-sub: #555555;
+    --input-bg: #ffffff;
+    --input-border: #cccccc;
+    --table-bg: #ffffff;
+    --td-odd-bg: #fdfdfd;
+    --td-even-bg: #f5f7fa;
+    --self-td-bg: #e2e8f0;
+    --th-text-color: #ffffff;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    padding: 30px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.header-container h1 { margin: 0; }
+
+.control-panel {
+    background-color: var(--panel-bg);
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.control-section {
+    background-color: var(--section-bg);
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.control-section h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 15px;
+    border-left: 4px solid var(--theme-color);
+    padding-left: 8px;
+    color: var(--text-sub);
+}
+
+.control-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.slider-group { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 10px; }
+.slider-group label { display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 13px; }
+.file-io-group { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--input-border); padding-top: 15px; }
+
+input[type="text"], select {
+    padding: 8px; border: 1px solid var(--input-border); border-radius: 4px; background-color: var(--input-bg); color: var(--text-color);
+}
+
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center;}
+.btn.primary { background-color: #007acc; color: white; }
+.btn.secondary { background-color: #555; color: white; }
+.btn.success { background-color: #10b981; color: white; }
+.btn.info { background-color: #f59e0b; color: white; } /* PNG用のオレンジボタン */
+.btn.danger { background-color: #ef4444; color: white; }
+.label-upload { display: inline-block; cursor: pointer; }
+.btn:hover { opacity: 0.9; }
+
+/* 呼称表のコンテナ */
+.table-container { overflow-x: auto; max-width: 100%; background-color: var(--table-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.capture-area { background-color: var(--table-bg); padding: 10px; display: inline-block; }
+table { border-collapse: collapse; width: max-content; color: var(--text-color); }
+
+th, td { 
+    border: 1px solid var(--input-border); 
+    padding: 6px; 
+    text-align: center; 
+    width: var(--cell-width);
+    max-width: var(--cell-width);
+    height: var(--cell-height);
+    font-size: var(--font-size);
+    word-break: break-all;
+}
+
+th { background-color: var(--theme-color); color: var(--th-text-color); font-weight: bold; cursor: pointer; }
+th:hover { opacity: 0.8; }
+
+/* ライトモード時のヘッダー文字視認性向上のための影（テーマカラーが明るい時用） */
+body.light-theme th { color: #000000; }
+
+ruby {
+    display: inline-flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    vertical-align: middle;
+}
+rt {
+    font-size: 10px;
+    font-weight: normal;
+    line-height: 1;
+    margin-bottom: 2px;
+    opacity: 0.8;
+}
+
+.v-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+}
+
+.char-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--input-border);
+}
+
+.hide-image .char-icon { display: none !important; }
+
+th input[type="text"] {
+    width: 90%; background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: var(--font-size);
+}
+
+tr:nth-child(odd) td { background-color: var(--td-odd-bg); }
+tr:nth-child(even) td { background-color: var(--td-even-bg); }
+td.self-call { background-color: var(--self-td-bg) !important; font-weight: bold; }
+td input { width: 100%; height: 100%; background-color: #fff; color: #000; border: none; text-align: center; font-size: var(--font-size); }
+
+/* モーダル */
+.modal {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
+    color: #fff; /* モーダル内は常にダーク背景で見やすく固定 */
+}
+.modal.open { display: flex; }
+.modal-content {
+    background-color: #2a2a2a; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.modal-content h3 { margin-top: 0; color: var(--theme-color); }
+.preview-box {
+    width: 60px; height: 60px; border-radius: 50%; background-color: #444; margin: 10px 0;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; color: #aaa; overflow: hidden;
+}
+.preview-box img { width: 100%; height: 100%; object-fit: cover; }
+.checkbox-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; max-height: 150px; overflow-y: auto;
+}
+.checkbox-grid label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
+.modal-buttons { text-align: right; }

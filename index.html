@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高度なアニメ呼称表ジェネレーター（完全版）</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+<body class="dark-theme"> <div class="header-container">
+        <h1>アニメ呼称表ジェネレーター</h1>
+        <button id="theme-toggle-btn" class="btn secondary">☀️ ライトモードに切り替え</button>
+    </div>
+    
+    <div class="control-panel">
+        <div class="control-section">
+            <h3>データ追加</h3>
+            <div class="control-group">
+                <input type="text" id="new-char-name" placeholder="新キャラクター名">
+                <input type="text" id="new-char-kana" placeholder="フリガナ（任意）">
+                <button id="add-char-btn" class="btn primary">＋ キャラ追加</button>
+            </div>
+            <div class="control-group" style="margin-top: 10px;">
+                <button id="add-ep-btn" class="btn primary">＋ 新しい話数を追加</button>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>表示切り替え・レイアウト調整</h3>
+            <div class="control-group">
+                <label for="view-episode">表示する話数：</label>
+                <select id="view-episode">
+                    <option value="all">全話（すべてのキャラ）</option>
+                </select>
+            </div>
+            <div class="control-group" style="margin-top: 5px;">
+                <label><input type="checkbox" id="toggle-image" checked> 縦列の画像を表示する</label>
+            </div>
+            <div class="control-group slider-group">
+                <label>マスの幅: <input type="range" id="size-width" min="80" max="300" value="140">px</label>
+                <label>マスの高さ: <input type="range" id="size-height" min="35" max="150" value="55">px</label>
+                <label>文字サイズ: <input type="range" id="size-font" min="10" max="30" value="14">px</label>
+            </div>
+        </div>
+
+        <div class="control-section">
+            <h3>設定と保存</h3>
+            <div class="control-group">
+                <label for="theme-color">テーマカラー：</label>
+                <input type="color" id="theme-color" value="#25eeff">
+            </div>
+            <div class="control-group" style="margin-top: 10px; gap: 5px;">
+                <button id="excel-btn" class="btn success">Excel書き出し</button>
+                <button id="png-btn" class="btn info">画像（PNG）で保存</button>
+                <button id="reset-btn" class="btn danger">初期化</button>
+            </div>
+            <div class="file-io-group">
+                <button id="save-file-btn" class="btn secondary">セーブ保存</button>
+                <label class="btn secondary label-upload">
+                    セーブ読込
+                    <input type="file" id="load-file-input" accept=".json" style="display:none;">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <div id="table-capture-area" class="capture-area">
+            <table id="matrix-table"></table>
+        </div>
+    </div>
+
+    <div id="ep-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-char-name">キャラクター名</h3>
+            <div class="image-upload-section">
+                <p>キャラクター画像（縦列用）：</p>
+                <div id="modal-image-preview" class="preview-box">画像なし</div>
+                <label class="btn primary label-upload" style="margin-top: 5px; display: inline-block;">
+                    画像を選択・変更
+                    <input type="file" id="char-image-input" accept="image/*" style="display:none;">
+                </label>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+            <p>登場する話数にチェックを入れてください：</p>
+            <div id="ep-checkbox-container" class="checkbox-grid"></div>
+            <div class="modal-buttons">
+                <button id="modal-close-btn" class="btn primary">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
