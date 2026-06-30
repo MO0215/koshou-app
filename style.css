@@ -5,7 +5,6 @@
     --font-size: 14px;
 }
 
-/* ダークテーマの配色設定 */
 body.dark-theme {
     --bg-color: #1a1a1a;
     --panel-bg: #2a2a2a;
@@ -21,7 +20,6 @@ body.dark-theme {
     --th-text-color: #000000;
 }
 
-/* ライトテーマの配色設定 */
 body.light-theme {
     --bg-color: #f4f6f9;
     --panel-bg: #ffffff;
@@ -45,12 +43,7 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-}
+.header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .header-container h1 { margin: 0; }
 
 .control-panel {
@@ -74,12 +67,8 @@ body {
 }
 
 .control-section h3 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 15px;
-    border-left: 4px solid var(--theme-color);
-    padding-left: 8px;
-    color: var(--text-sub);
+    margin-top: 0; margin-bottom: 12px; font-size: 15px;
+    border-left: 4px solid var(--theme-color); padding-left: 8px; color: var(--text-sub);
 }
 
 .control-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -95,12 +84,11 @@ input[type="text"], select {
 .btn.primary { background-color: #007acc; color: white; }
 .btn.secondary { background-color: #555; color: white; }
 .btn.success { background-color: #10b981; color: white; }
-.btn.info { background-color: #f59e0b; color: white; } /* PNG用のオレンジボタン */
+.btn.info { background-color: #f59e0b; color: white; } 
 .btn.danger { background-color: #ef4444; color: white; }
 .label-upload { display: inline-block; cursor: pointer; }
 .btn:hover { opacity: 0.9; }
 
-/* 呼称表のコンテナ */
 .table-container { overflow-x: auto; max-width: 100%; background-color: var(--table-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .capture-area { background-color: var(--table-bg); padding: 10px; display: inline-block; }
 table { border-collapse: collapse; width: max-content; color: var(--text-color); }
@@ -119,40 +107,28 @@ th, td {
 th { background-color: var(--theme-color); color: var(--th-text-color); font-weight: bold; cursor: pointer; }
 th:hover { opacity: 0.8; }
 
-/* ライトモード時のヘッダー文字視認性向上のための影（テーマカラーが明るい時用） */
 body.light-theme th { color: #000000; }
 
-ruby {
-    display: inline-flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    vertical-align: middle;
+/* 【新設定】縦列のヘッダーのみドラッグ可能（手のひらカーソル）にする */
+tr th:first-child {
+    cursor: grab;
 }
-rt {
-    font-size: 10px;
-    font-weight: normal;
-    line-height: 1;
-    margin-bottom: 2px;
-    opacity: 0.8;
+tr th:first-child:active {
+    cursor: grabbing;
 }
 
-.v-header-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    height: 100%;
+/* 【新設定】ドラッグ中の行の見た目 */
+tr.dragging {
+    opacity: 0.5;
+    background-color: #4b5563 !important;
+    border: 2px dashed var(--theme-color);
 }
 
-.char-icon {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid var(--input-border);
-}
+ruby { display: inline-flex; flex-direction: column-reverse; align-items: center; vertical-align: middle; }
+rt { font-size: 10px; font-weight: normal; line-height: 1; margin-bottom: 2px; opacity: 0.8; }
 
+.v-header-content { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100%; }
+.char-icon { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--input-border); }
 .hide-image .char-icon { display: none !important; }
 
 th input[type="text"] {
@@ -164,16 +140,13 @@ tr:nth-child(even) td { background-color: var(--td-even-bg); }
 td.self-call { background-color: var(--self-td-bg) !important; font-weight: bold; }
 td input { width: 100%; height: 100%; background-color: #fff; color: #000; border: none; text-align: center; font-size: var(--font-size); }
 
-/* モーダル */
 .modal {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center;
-    color: #fff; /* モーダル内は常にダーク背景で見やすく固定 */
+    background-color: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; color: #fff; 
 }
 .modal.open { display: flex; }
 .modal-content {
-    background-color: #2a2a2a; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    background-color: #2a2a2a; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 .modal-content h3 { margin-top: 0; color: var(--theme-color); }
 .preview-box {

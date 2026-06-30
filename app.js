@@ -3,7 +3,7 @@ let appData = JSON.parse(localStorage.getItem('koshou_app_data_v7')) || {
     themeColor: "#25eeff",
     maxEpisodes: 12,
     showImages: true,
-    isLightTheme: false, // ライトモードの状態保存用
+    isLightTheme: false,
     characters: [
         { id: 1, name: "綾小路清隆", kana: "あやのこうじ", image: "", episodes: [1,2,3,4,5,6,7,8,9,10,11,12] },
         { id: 2, name: "堀北鈴音", kana: "ほりきた", image: "", episodes: [1,2,3,5,6,7,10,11,12] },
@@ -40,7 +40,6 @@ function initApp() {
     toggleImageCheckbox.checked = appData.showImages;
     updateImageVisibility();
 
-    // テーマ（ライト/ダーク）の初期適用
     if (appData.isLightTheme) {
         document.body.classList.remove("dark-theme");
         document.body.classList.add("light-theme");
@@ -51,25 +50,17 @@ function initApp() {
         themeToggleBtn.textContent = "☀️ ライトモードに切り替え";
     }
 
-    // スライダー設定
     document.documentElement.style.setProperty('--cell-width', `${widthSlider.value}px`);
     document.documentElement.style.setProperty('--cell-height', `${heightSlider.value}px`);
     document.documentElement.style.setProperty('--font-size', `${fontSlider.value}px`);
 
-    widthSlider.addEventListener("input", (e) => {
-        document.documentElement.style.setProperty('--cell-width', `${e.target.value}px`);
-    });
-    heightSlider.addEventListener("input", (e) => {
-        document.documentElement.style.setProperty('--cell-height', `${e.target.value}px`);
-    });
-    fontSlider.addEventListener("input", (e) => {
-        document.documentElement.style.setProperty('--font-size', `${e.target.value}px`);
-    });
+    widthSlider.addEventListener("input", (e) => { document.documentElement.style.setProperty('--cell-width', `${e.target.value}px`); });
+    heightSlider.addEventListener("input", (e) => { document.documentElement.style.setProperty('--cell-height', `${e.target.value}px`); });
+    fontSlider.addEventListener("input", (e) => { document.documentElement.style.setProperty('--font-size', `${e.target.value}px`); });
 
     renderTable();
 }
 
-// テーマ切り替えイベント
 themeToggleBtn.addEventListener("click", () => {
     if (document.body.classList.contains("dark-theme")) {
         document.body.classList.remove("dark-theme");
@@ -111,6 +102,7 @@ function renderTable() {
     table.innerHTML = "";
     const selectedEp = viewEpisodeSelect.value;
 
+    // 表示するキャラクターを定義
     const displayCharacters = appData.characters.filter(char => {
         if (selectedEp === "all") return true;
         return char.episodes && char.episodes.includes(parseInt(selectedEp));
@@ -121,7 +113,7 @@ function renderTable() {
         return;
     }
 
-    // ヘッダー行（横軸）
+    // --- ヘッダー行（横軸） ---
     const headerRow = document.createElement("tr");
     const topLeftTh = document.createElement("th");
     topLeftTh.textContent = "呼ぶ ＼ 呼ばれる";
@@ -134,9 +126,13 @@ function renderTable() {
     });
     table.appendChild(headerRow);
 
-    // 各行（縦軸）
-    displayCharacters.forEach(fromChar => {
+    // --- 各行（縦軸） ---
+    displayCharacters.forEach((fromChar, index) => {
         const row = document.createElement("tr");
+        
+        // 【重要】行をドラッグ可能にする属性を付与し、キャラクター固有のIDを記憶させる
+        row.draggable = true;
+        row.dataset.charId = fromChar.id;
 
         const rowHeader = document.createElement("th");
         setupHeaderCell(rowHeader, fromChar, true);
@@ -172,15 +168,72 @@ function renderTable() {
 
             row.appendChild(td);
         });
+
+        // ドラッグ＆ドロップイベントの組み込み
+        setupDragAndDropEvents(row);
         table.appendChild(row);
     });
     updateImageVisibility();
 }
 
-// --- 4. ヘッダーセル（衝突回避・名前編集フォーム） ---
+// --- 【新機能】ドラッグ＆ドロップのイベントロジック ---
+function setupDragAndDropEvents(row) {
+    row.addEventListener("dragstart", (e) => {
+        row.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", row.dataset.charId);
+    });
+
+    row.addEventListener("dragend", () => {
+        row.classList.remove("dragging");
+        // 並び替えが終わったら最終的な順番をローカルストレージへ即時保存
+        saveToLocalStorage();
+    });
+
+    row.addEventListener("dragover", (e) => {
+        e.preventDefault(); // ドロップを許可するために必須
+        const draggingRow = table.querySelector(".dragging");
+        if (!draggingRow || draggingRow === row) return;
+
+        // マウスの位置を計算して、行の上半分にいれば上に、下半分にいれば下に差し込む
+        const bounding = row.getBoundingClientRect();
+        const offset = e.clientY - bounding.top;
+        if (offset > bounding.height / 2) {
+            row.after(draggingRow);
+        } else {
+            row.before(draggingRow);
+        }
+
+        // 画面上のDOM（行）の並び順に合わせて、内部データ（appData.characters）の順番も並び替える
+        reorderInternalData();
+    });
+}
+
+// 画面の見た目の並び順に合わせて、配列データを並び替える関数
+function reorderInternalData() {
+    const rows = Array.from(table.querySelectorAll("tr")).slice(1); // ヘッダー行を除く
+    const newOrderIds = rows.map(r => parseInt(r.dataset.charId));
+
+    // 現在の表示中キャラだけでなく、全データ（appData.characters）を新しい順序にソートする
+    appData.characters.sort((a, b) => {
+        return newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id);
+    });
+    
+    // 横軸（列ヘッダー）もリアルタイムに並び替えるために再描画
+    const headerRow = table.querySelector("tr");
+    const ths = Array.from(headerRow.querySelectorAll("th")).slice(1); // 左上除く
+    
+    // 横軸のth要素を縦の並びと同じ順番に並び替える
+    newOrderIds.forEach(id => {
+        const char = appData.characters.find(c => c.id === id);
+        const targetTh = ths.find(th => th.textContent.includes(char.name));
+        if (targetTh) headerRow.appendChild(targetTh);
+    });
+}
+
+// --- ヘッダーセル（衝突回避・名前編集フォーム） ---
 function setupHeaderCell(th, char, includeImage) {
     th.innerHTML = "";
-    
     const container = document.createElement("div");
     container.classList.add("v-header-content");
 
@@ -203,15 +256,8 @@ function setupHeaderCell(th, char, includeImage) {
 
     th.addEventListener("click", (e) => {
         if (th.querySelector(".edit-form")) return;
-        if (clickTimer) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            return;
-        }
-        clickTimer = setTimeout(() => {
-            openEpisodeModal(char);
-            clickTimer = null;
-        }, 200);
+        if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
+        clickTimer = setTimeout(() => { openEpisodeModal(char); clickTimer = null; }, 200);
     });
 
     th.addEventListener("dblclick", (e) => {
@@ -261,17 +307,13 @@ function setupHeaderCell(th, char, includeImage) {
     });
 }
 
-// --- 5. モーダル制御 ---
+// --- モーダル制御 ---
 function openEpisodeModal(char) {
     currentEditingCharId = char.id;
     document.getElementById("modal-char-name").textContent = `${char.name} の設定`;
     
     const preview = document.getElementById("modal-image-preview");
-    if (char.image) {
-        preview.innerHTML = `<img src="${char.image}">`;
-    } else {
-        preview.textContent = "画像なし";
-    }
+    if (char.image) { preview.innerHTML = `<img src="${char.image}">`; } else { preview.textContent = "画像なし"; }
 
     const container = document.getElementById("ep-checkbox-container");
     container.innerHTML = "";
@@ -321,7 +363,7 @@ document.getElementById("modal-close-btn").addEventListener("click", () => {
     renderTable();
 });
 
-// --- 6. 操作パネルの各種ボタンイベント ---
+// --- 操作パネルの各種ボタンイベント ---
 document.getElementById("add-char-btn").addEventListener("click", () => {
     const nameInput = document.getElementById("new-char-name");
     const kanaInput = document.getElementById("new-char-kana");
@@ -336,8 +378,7 @@ document.getElementById("add-char-btn").addEventListener("click", () => {
     appData.characters.push({ id: newId, name: name, kana: kana, image: "", episodes: allEps });
     appData.appellations[`${newId}-${newId}`] = "私";
 
-    nameInput.value = "";
-    kanaInput.value = "";
+    nameInput.value = ""; kanaInput.value = "";
     renderTable();
     saveToLocalStorage();
 });
@@ -367,20 +408,18 @@ function saveToLocalStorage() {
     localStorage.setItem('koshou_app_data_v7', JSON.stringify(appData));
 }
 
-// --- 7. 【新機能】画像（PNG）として美しく保存するロジック ---
+// --- 画像（PNG）として保存するロジック ---
 document.getElementById("png-btn").addEventListener("click", () => {
     const captureArea = document.getElementById("table-capture-area");
     const selectedEp = viewEpisodeSelect.value;
     const titleName = selectedEp === "all" ? "呼称表_全話分" : `呼称表_第${selectedEp}話時点`;
 
-    // html2canvasを実行（スタイル崩れを防ぐ高度な設定オプション）
     html2canvas(captureArea, {
         backgroundColor: getComputedStyle(document.body).getPropertyValue('--table-bg').trim(),
-        scale: 2, // 2倍の解像度で文字や画像をクッキリ美しく印刷品質にする
-        useCORS: true, // 画像の読み込み許可
+        scale: 2, 
+        useCORS: true, 
         logging: false
     }).then(canvas => {
-        // 画像リンクを作って自動ダウンロード
         const imageURI = canvas.toDataURL("image/png");
         const downloadAnchor = document.createElement('a');
         downloadAnchor.href = imageURI;
@@ -388,13 +427,10 @@ document.getElementById("png-btn").addEventListener("click", () => {
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-    }).catch(err => {
-        alert("画像の書き出し中にエラーが発生しました。");
-        console.error(err);
-    });
+    }).catch(err => { alert("画像の書き出し中にエラーが発生しました。"); });
 });
 
-// --- 8. Excel書き出しロジック ---
+// --- Excel書き出しロジック ---
 document.getElementById("excel-btn").addEventListener("click", () => {
     const selectedEp = viewEpisodeSelect.value;
     const displayCharacters = appData.characters.filter(char => {
@@ -411,25 +447,13 @@ document.getElementById("excel-btn").addEventListener("click", () => {
         font: { bold: true, color: { rgb: "000000" }, name: "游ゴシック" },
         alignment: { horizontal: "center", vertical: "center", wrapText: true },
         border: {
-            top: { style: "thin", color: { rgb: "A6A6A6" } },
-            bottom: { style: "thin", color: { rgb: "A6A6A6" } },
-            left: { style: "thin", color: { rgb: "A6A6A6" } },
-            right: { style: "thin", color: { rgb: "A6A6A6" } }
+            top: { style: "thin", color: { rgb: "A6A6A6" } }, bottom: { style: "thin", color: { rgb: "A6A6A6" } },
+            left: { style: "thin", color: { rgb: "A6A6A6" } }, right: { style: "thin", color: { rgb: "A6A6A6" } }
         }
     };
 
-    const cellStyle = {
-        font: { name: "游ゴシック" },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        border: headerStyle.border
-    };
-
-    const selfStyle = {
-        fill: { fgColor: { rgb: "EAEAEA" } }, 
-        font: { bold: true, name: "游ゴシック" },
-        alignment: { horizontal: "center", vertical: "center", wrapText: true },
-        border: headerStyle.border
-    };
+    const cellStyle = { font: { name: "游ゴシック" }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: headerStyle.border };
+    const selfStyle = { fill: { fgColor: { rgb: "EAEAEA" } }, font: { bold: true, name: "游ゴシック" }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: headerStyle.border };
 
     ws["A1"] = { v: "呼ぶ ＼ 呼ばれる", s: headerStyle };
 
@@ -471,7 +495,7 @@ document.getElementById("excel-btn").addEventListener("click", () => {
     XLSX.writeFile(wb, `${titleName}.xlsx`);
 });
 
-// --- 9. JSONセーブファイル管理 ---
+// --- JSONセーブファイル管理 ---
 document.getElementById("save-file-btn").addEventListener("click", () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -496,9 +520,7 @@ document.getElementById("load-file-input").addEventListener("change", (e) => {
                 initApp();
                 alert("データを正常に読み込みました！");
             }
-        } catch (err) {
-            alert("ファイルの読み込みに失敗しました。");
-        }
+        } catch (err) { alert("ファイルの読み込みに失敗しました。"); }
     };
     reader.readAsText(file);
 });
