@@ -4,6 +4,10 @@ let appData = JSON.parse(localStorage.getItem('koshou_app_data_v7')) || {
     maxEpisodes: 12,
     showImages: true,
     isLightTheme: false,
+    cellWidth: 140,
+    cellHeight: 55,
+    fontSize: 14,
+    cornerText: "呼ぶ ＼ 呼ばれる", // 【新設定】左上マスのテキスト初期値
     characters: [
         { id: 1, name: "綾小路清隆", kana: "あやのこうじ", image: "", episodes: [1,2,3,4,5,6,7,8,9,10,11,12] },
         { id: 2, name: "堀北鈴音", kana: "ほりきた", image: "", episodes: [1,2,3,5,6,7,10,11,12] },
@@ -50,15 +54,34 @@ function initApp() {
         themeToggleBtn.textContent = "☀️ ライトモードに切り替え";
     }
 
+    widthSlider.value = appData.cellWidth || 140;
+    heightSlider.value = appData.cellHeight || 55;
+    fontSlider.value = appData.fontSize || 14;
+    updateStylesFromSliders();
+
+    widthSlider.addEventListener("input", (e) => { 
+        document.documentElement.style.setProperty('--cell-width', `${e.target.value}px`);
+        appData.cellWidth = parseInt(e.target.value);
+        saveToLocalStorage();
+    });
+    heightSlider.addEventListener("input", (e) => { 
+        document.documentElement.style.setProperty('--cell-height', `${e.target.value}px`);
+        appData.cellHeight = parseInt(e.target.value);
+        saveToLocalStorage();
+    });
+    fontSlider.addEventListener("input", (e) => { 
+        document.documentElement.style.setProperty('--font-size', `${e.target.value}px`);
+        appData.fontSize = parseInt(e.target.value);
+        saveToLocalStorage();
+    });
+
+    renderTable();
+}
+
+function updateStylesFromSliders() {
     document.documentElement.style.setProperty('--cell-width', `${widthSlider.value}px`);
     document.documentElement.style.setProperty('--cell-height', `${heightSlider.value}px`);
     document.documentElement.style.setProperty('--font-size', `${fontSlider.value}px`);
-
-    widthSlider.addEventListener("input", (e) => { document.documentElement.style.setProperty('--cell-width', `${e.target.value}px`); });
-    heightSlider.addEventListener("input", (e) => { document.documentElement.style.setProperty('--cell-height', `${e.target.value}px`); });
-    fontSlider.addEventListener("input", (e) => { document.documentElement.style.setProperty('--font-size', `${e.target.value}px`); });
-
-    renderTable();
 }
 
 themeToggleBtn.addEventListener("click", () => {
@@ -114,8 +137,37 @@ function renderTable() {
 
     // --- ヘッダー行（横軸） ---
     const headerRow = document.createElement("tr");
+    
+    // 【重要】左上セルの生成と編集ロジック
     const topLeftTh = document.createElement("th");
-    topLeftTh.textContent = "呼ぶ ＼ 呼ばれる";
+    topLeftTh.className = "corner-cell";
+    if (appData.cornerText === undefined) appData.cornerText = "呼ぶ ＼ 呼ばれる";
+    topLeftTh.textContent = appData.cornerText;
+    
+    topLeftTh.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        if (topLeftTh.querySelector("input")) return;
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = appData.cornerText;
+        input.placeholder = "（非表示にする場合は空欄）";
+        topLeftTh.textContent = "";
+        topLeftTh.appendChild(input);
+        input.focus();
+
+        const saveCornerText = () => {
+            const newValue = input.value; // トリムせず空欄（スペース含む）も許容
+            appData.cornerText = newValue;
+            topLeftTh.textContent = newValue;
+            saveToLocalStorage();
+            renderTable(); // 表示幅の再計算のために再描画
+        };
+
+        input.addEventListener("blur", saveCornerText);
+        input.addEventListener("keydown", (e) => { if (e.key === "Enter") saveCornerText(); });
+    });
+    
     headerRow.appendChild(topLeftTh);
 
     displayCharacters.forEach(char => {
@@ -140,7 +192,6 @@ function renderTable() {
             const key = `${fromChar.id}-${toChar.id}`;
             td.textContent = appData.appellations[key] || "";
 
-            // 【重要】ここで一人称マス（斜め）のクラスを適用
             if (fromChar.id === toChar.id) {
                 td.classList.add("self-call");
             }
@@ -173,7 +224,7 @@ function renderTable() {
     updateImageVisibility();
 }
 
-// --- 4. 【修正】ドラッグ＆ドロップのイベントロジック ---
+// --- 4. ドラッグ＆ドロップのイベントロジック ---
 function setupDragAndDropEvents(row) {
     row.addEventListener("dragstart", (e) => {
         row.classList.add("dragging");
@@ -183,8 +234,6 @@ function setupDragAndDropEvents(row) {
 
     row.addEventListener("dragend", () => {
         row.classList.remove("dragging");
-        // ドラッグ終了時に配列データに基づいて「表全体を完全に再描画」する
-        // これにより一人称マスのグレー背景が新しい位置に正しく再計算されます
         renderTable(); 
         saveToLocalStorage();
     });
@@ -201,8 +250,6 @@ function setupDragAndDropEvents(row) {
         } else {
             row.before(draggingRow);
         }
-
-        // リアルタイムに配列データを並び替え（横軸ヘッダーの追従処理含む）
         reorderInternalData();
     });
 }
@@ -211,19 +258,8 @@ function reorderInternalData() {
     const rows = Array.from(table.querySelectorAll("tr")).slice(1); 
     const newOrderIds = rows.map(r => parseInt(r.dataset.charId));
 
-    // 内部配列の順序を書き換える
     appData.characters.sort((a, b) => {
         return newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id);
-    });
-    
-    // 【修正】ドラッグ中に横軸のヘッダーも一時的に追従させる
-    const headerRow = table.querySelector("tr");
-    const ths = Array.from(headerRow.querySelectorAll("th")).slice(1);
-    
-    newOrderIds.forEach(id => {
-        const char = appData.characters.find(c => c.id === id);
-        const targetTh = ths.find(th => th.textContent.includes(char.name));
-        if (targetTh) headerRow.appendChild(targetTh);
     });
 }
 
@@ -253,7 +289,7 @@ function setupHeaderCell(th, char, includeImage) {
     th.addEventListener("click", (e) => {
         if (th.querySelector(".edit-form")) return;
         if (clickTimer) { clearTimeout(clickTimer); clickTimer = null; return; }
-        clickTimer = setTimeout(() => { openEpisodeModal(char); clickTimer = null; }, 200);
+        clickTimer = setTimeout(() => { openEpisodeModal(char); clickTimer = null; }, 300);
     });
 
     th.addEventListener("dblclick", (e) => {
@@ -359,6 +395,30 @@ document.getElementById("modal-close-btn").addEventListener("click", () => {
     renderTable();
 });
 
+// --- キャラクター削除機能 ---
+document.getElementById("char-delete-btn").addEventListener("click", () => {
+    if (!currentEditingCharId) return;
+
+    const charObj = appData.characters.find(c => c.id === currentEditingCharId);
+    if (!charObj) return;
+
+    if (confirm(`「${charObj.name}」を削除しますか？\n※このキャラクターの呼称データもすべて削除されます。`)) {
+        appData.characters = appData.characters.filter(c => c.id !== currentEditingCharId);
+
+        Object.keys(appData.appellations).forEach(key => {
+            const [fromId, toId] = key.split("-").map(Number);
+            if (fromId === currentEditingCharId || toId === currentEditingCharId) {
+                delete appData.appellations[key];
+            }
+        });
+
+        saveToLocalStorage();
+        epModal.classList.remove("open");
+        renderTable();
+        currentEditingCharId = null;
+    }
+});
+
 // --- 操作パネルの各種ボタンイベント ---
 document.getElementById("add-char-btn").addEventListener("click", () => {
     const nameInput = document.getElementById("new-char-name");
@@ -451,7 +511,8 @@ document.getElementById("excel-btn").addEventListener("click", () => {
     const cellStyle = { font: { name: "游ゴシック" }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: headerStyle.border };
     const selfStyle = { fill: { fgColor: { rgb: "EAEAEA" } }, font: { bold: true, name: "游ゴシック" }, alignment: { horizontal: "center", vertical: "center", wrapText: true }, border: headerStyle.border };
 
-    ws["A1"] = { v: "呼ぶ ＼ 呼ばれる", s: headerStyle };
+    // 【修正】角マスの値をExcelにも反映
+    ws["A1"] = { v: appData.cornerText || "", s: headerStyle };
 
     displayCharacters.forEach((c, idx) => {
         const colLetter = XLSX.utils.encode_col(idx + 1);

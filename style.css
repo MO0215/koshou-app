@@ -5,6 +5,7 @@
     --font-size: 14px;
 }
 
+/* --- ダークモード変数 --- */
 body.dark-theme {
     --bg-color: #1a1a1a;
     --panel-bg: #2a2a2a;
@@ -14,12 +15,14 @@ body.dark-theme {
     --input-bg: #222222;
     --input-border: #444444;
     --table-bg: #222222;
+    --table-border: #444444;
     --td-odd-bg: #2d2d2d;
     --td-even-bg: #252525;
     --self-td-bg: #3a3a3a;
     --th-text-color: #000000;
 }
 
+/* --- ライトモード変数 --- */
 body.light-theme {
     --bg-color: #f4f6f9;
     --panel-bg: #ffffff;
@@ -29,12 +32,14 @@ body.light-theme {
     --input-bg: #ffffff;
     --input-border: #cccccc;
     --table-bg: #ffffff;
+    --table-border: #b0b8c4;
     --td-odd-bg: #fdfdfd;
     --td-even-bg: #f5f7fa;
     --self-td-bg: #e2e8f0;
-    --th-text-color: #ffffff;
+    --th-text-color: #000000;
 }
 
+/* --- 全体基本設定 --- */
 body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
     padding: 30px;
@@ -43,9 +48,15 @@ body {
     transition: background-color 0.3s, color 0.3s;
 }
 
-.header-container { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.header-container { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 30px; 
+}
 .header-container h1 { margin: 0; }
 
+/* --- 操作パネル --- */
 .control-panel {
     background-color: var(--panel-bg);
     padding: 20px;
@@ -67,8 +78,12 @@ body {
 }
 
 .control-section h3 {
-    margin-top: 0; margin-bottom: 12px; font-size: 15px;
-    border-left: 4px solid var(--theme-color); padding-left: 8px; color: var(--text-sub);
+    margin-top: 0; 
+    margin-bottom: 12px; 
+    font-size: 15px;
+    border-left: 4px solid var(--theme-color); 
+    padding-left: 8px; 
+    color: var(--text-sub);
 }
 
 .control-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -77,9 +92,18 @@ body {
 .file-io-group { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--input-border); padding-top: 15px; }
 
 input[type="text"], select {
-    padding: 8px; border: 1px solid var(--input-border); border-radius: 4px; background-color: var(--input-bg); color: var(--text-color);
+    padding: 8px; 
+    border: 1px solid var(--input-border); 
+    border-radius: 4px; 
+    background-color: var(--input-bg); 
+    color: var(--text-color);
+    outline: none;
+}
+input[type="text"]:focus, select:focus {
+    border-color: var(--theme-color);
 }
 
+/* --- ボタン --- */
 .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; text-align: center;}
 .btn.primary { background-color: #007acc; color: white; }
 .btn.secondary { background-color: #555; color: white; }
@@ -89,12 +113,20 @@ input[type="text"], select {
 .label-upload { display: inline-block; cursor: pointer; }
 .btn:hover { opacity: 0.9; }
 
-.table-container { overflow-x: auto; max-width: 100%; background-color: var(--table-bg); padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+/* --- テーブルエリア --- */
+.table-container { 
+    overflow-x: auto; 
+    max-width: 100%; 
+    background-color: var(--table-bg); 
+    padding: 15px; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+}
 .capture-area { background-color: var(--table-bg); padding: 10px; display: inline-block; }
 table { border-collapse: collapse; width: max-content; color: var(--text-color); }
 
 th, td { 
-    border: 1px solid var(--input-border); 
+    border: 1px solid var(--table-border); 
     padding: 6px; 
     text-align: center; 
     width: var(--cell-width);
@@ -102,58 +134,90 @@ th, td {
     height: var(--cell-height);
     font-size: var(--font-size);
     word-break: break-all;
+    box-sizing: border-box;
 }
 
 th { background-color: var(--theme-color); color: var(--th-text-color); font-weight: bold; cursor: pointer; }
 th:hover { opacity: 0.8; }
 
-body.light-theme th { color: #000000; }
+tr th:first-child { cursor: grab; }
+tr th:first-child:active { cursor: grabbing; }
 
-/* 【新設定】縦列のヘッダーのみドラッグ可能（手のひらカーソル）にする */
-tr th:first-child {
-    cursor: grab;
-}
-tr th:first-child:active {
-    cursor: grabbing;
+/* 【修正】左上角マスはドラッグ不可（標準カーソル）にする */
+th.corner-cell {
+    cursor: pointer !important;
 }
 
-/* 【新設定】ドラッグ中の行の見た目 */
 tr.dragging {
-    opacity: 0.5;
+    opacity: 0.4;
     background-color: #4b5563 !important;
-    border: 2px dashed var(--theme-color);
+    outline: 2px dashed var(--theme-color);
 }
 
+/* --- ルビ・画像関係 --- */
 ruby { display: inline-flex; flex-direction: column-reverse; align-items: center; vertical-align: middle; }
 rt { font-size: 10px; font-weight: normal; line-height: 1; margin-bottom: 2px; opacity: 0.8; }
 
 .v-header-content { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100%; }
-.char-icon { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--input-border); }
+.char-icon { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1px solid var(--table-border); }
 .hide-image .char-icon { display: none !important; }
 
+/* --- インライン編集フォーム --- */
 th input[type="text"] {
-    width: 90%; background-color: #fff; color: #000; text-align: center; font-weight: bold; font-size: var(--font-size);
+    width: 90%; 
+    background-color: var(--input-bg); 
+    color: var(--text-color); 
+    border: 1px solid var(--theme-color);
+    text-align: center; 
+    font-weight: bold; 
+    font-size: var(--font-size);
+    border-radius: 4px;
+    box-sizing: border-box;
 }
 
 tr:nth-child(odd) td { background-color: var(--td-odd-bg); }
 tr:nth-child(even) td { background-color: var(--td-even-bg); }
 td.self-call { background-color: var(--self-td-bg) !important; font-weight: bold; }
-td input { width: 100%; height: 100%; background-color: #fff; color: #000; border: none; text-align: center; font-size: var(--font-size); }
 
+td input { 
+    width: 100%; 
+    height: 100%; 
+    background-color: var(--input-bg); 
+    color: var(--text-color); 
+    border: 1px solid var(--theme-color); 
+    text-align: center; 
+    font-size: var(--font-size); 
+    box-sizing: border-box;
+    border-radius: 4px;
+}
+
+/* --- モーダル --- */
 .modal {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background-color: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; color: #fff; 
+    background-color: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; 
 }
 .modal.open { display: flex; }
+
 .modal-content {
-    background-color: #2a2a2a; padding: 30px; border-radius: 8px; width: 400px; max-width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    background-color: var(--panel-bg); 
+    color: var(--text-color); 
+    padding: 30px; 
+    border-radius: 8px; 
+    width: 400px; 
+    max-width: 90%; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    border: 1px solid var(--input-border);
+    transition: background-color 0.3s, color 0.3s;
 }
 .modal-content h3 { margin-top: 0; color: var(--theme-color); }
+
 .preview-box {
-    width: 60px; height: 60px; border-radius: 50%; background-color: #444; margin: 10px 0;
-    display: flex; align-items: center; justify-content: center; font-size: 11px; color: #aaa; overflow: hidden;
+    width: 60px; height: 60px; border-radius: 50%; background-color: var(--section-bg); margin: 10px 0;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-sub); overflow: hidden;
+    border: 1px solid var(--input-border);
 }
 .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+
 .checkbox-grid {
     display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; max-height: 150px; overflow-y: auto;
 }

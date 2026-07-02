@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高度なアニメ呼称表ジェネレーター（並び替え対応版）</title>
+    <title>高度なアニメ呼称表ジェネレーター（並び替え・削除対応版）</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -87,7 +87,8 @@
             <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
             <p>登場する話数にチェックを入れてください：</p>
             <div id="ep-checkbox-container" class="checkbox-grid"></div>
-            <div class="modal-buttons">
+            <div class="modal-buttons" style="display: flex; justify-content: space-between; align-items: center;">
+                <button id="char-delete-btn" class="btn danger">🗑️ このキャラを削除</button>
                 <button id="modal-close-btn" class="btn primary">閉じる</button>
             </div>
         </div>
